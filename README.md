@@ -21,10 +21,10 @@ This class is for channel/frequency specific tasks
     print(chanFreq.fiveEight(5200))
     ````
 * fiveEightRev(val):
-        ````python
-        """Channel to Frequency converter for 5.8 GHz"""
-        print(fiveEightrev(val):
-        ````
+    ````python
+    """Channel to Frequency converter for 5.8 GHz"""
+    print(fiveEightrev(val):
+    ````
     ````
 
 ### conv
