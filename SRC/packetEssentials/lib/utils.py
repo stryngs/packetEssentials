@@ -97,49 +97,49 @@ class Poption(object):
                 return pktFlow(' '.join(streamList[:-qty]).replace(' ', ''), output)
 
 
-def crcShave(sObj, shaveLeft = True, swVal = False):
-    """Given a scapy object, iterate through all possible crc32 values
-    Shave from left to right by default
-    Calculate the CRC32 until there are no more bytes
-    Returns True and stops if swVal is found
+    def crcShave(self, sObj, shaveLeft = True, swVal = False):
+        """Given a scapy object, iterate through all possible crc32 values
+        Shave from left to right by default
+        Calculate the CRC32 until there are no more bytes
+        Returns True and stops if swVal is found
 
-    Useful for throwing things against a wall and seeing what sticks
+        Useful for throwing things against a wall and seeing what sticks
 
-    If you know the scapy/wireshark version of the FCS you are hunting, use the
-    swVal.  As an example --> crcShave(sObj, swVal = '0x153e3ebd')
+        If you know the scapy/wireshark version of the FCS you are hunting, use the
+        swVal.  As an example --> crcShave(sObj, swVal = '0x153e3ebd')
 
-    If you want to shave the bytes from right to left, shaveLeft = False
+        If you want to shave the bytes from right to left, shaveLeft = False
 
-    Don't forget to remove the FCS bytes on the end of a frame before using, if
-    those bytes are the FCS you hunt.
+        Don't forget to remove the FCS bytes on the end of a frame before using, if
+        those bytes are the FCS you hunt.
 
-    Example usage as a simple function:
-    import binascii
-    import packetEssentials as PE
-    from scapy.all import *
-    from textwrap import wrap
-    p = RadioTap(binascii.unhexlify('00 00 38 00 2F 40 40 A0 20 08 00 A0 20 08 00 00 20 33 7B CD 04 00 00 00 10 0C 9E 09 C0 00 A7 00 00 00 00 00 00 00 00 00 61 32 7B CD 00 00 00 00 16 00 11 03 A7 00 A3 01 C4 00 32 05 E0 3E 44 08 00 00 BD 3E 3E 15'.replace(' ', '')))
-    swVal = hex(p[Dot11FCS].fcs)
-    btVal = ' '.join(wrap(PE.pt.endSwap(swVal).upper()[2:], 2))                 ## Useful to know for Endianness
-    lbVal = PE.pt.byteRip(p, output = 'hex', qty = 4, order = 'last')
-    choppedP = PE.pt.byteRip(p, chop = True, output = 'str', qty = 4, order = 'last')
-    x = crcShave(choppedP, swVal = swVal, shaveLeft = False)
-    print(x)
-    """
-    if shaveLeft is True:
-        dir = 'first'
-    else:
-        dir = 'last'
-    for n in range(len(sObj)):
-        ourByte = self.byteRip(sObj, order = dir, chop = True, output = 'str', qty = n)
-        ourCrc = crc32(ourByte)
-        ourHex = hex(0xffffffff & ourCrc)
-        print('{0} --> {1} {2}'.format(n, ourHex, hexstr(ourByte, onlyhex = 1)))
+        Example usage as a simple function:
+        import binascii
+        import packetEssentials as PE
+        from scapy.all import *
+        from textwrap import wrap
+        p = RadioTap(binascii.unhexlify('00 00 38 00 2F 40 40 A0 20 08 00 A0 20 08 00 00 20 33 7B CD 04 00 00 00 10 0C 9E 09 C0 00 A7 00 00 00 00 00 00 00 00 00 61 32 7B CD 00 00 00 00 16 00 11 03 A7 00 A3 01 C4 00 32 05 E0 3E 44 08 00 00 BD 3E 3E 15'.replace(' ', '')))
+        swVal = hex(p[Dot11FCS].fcs)
+        btVal = ' '.join(wrap(PE.pt.endSwap(swVal).upper()[2:], 2))                 ## Useful to know for Endianness
+        lbVal = PE.pt.byteRip(p, output = 'hex', qty = 4, order = 'last')
+        choppedP = PE.pt.byteRip(p, chop = True, output = 'str', qty = 4, order = 'last')
+        x = crcShave(choppedP, swVal = swVal, shaveLeft = False)
+        print(x)
+        """
+        if shaveLeft is True:
+            dir = 'first'
+        else:
+            dir = 'last'
+        for n in range(len(sObj)):
+            ourByte = self.byteRip(sObj, order = dir, chop = True, output = 'str', qty = n)
+            ourCrc = crc32(ourByte)
+            ourHex = hex(0xffffffff & ourCrc)
+            print('{0} --> {1} {2}'.format(n, ourHex, hexstr(ourByte, onlyhex = 1)))
 
-        ## Check sw
-        if hex(crc32(self.byteRip(sObj, chop = True, output = 'str', qty = n))) == swVal:
-            return True
-    return False
+            ## Check sw
+            if hex(crc32(self.byteRip(sObj, chop = True, output = 'str', qty = n))) == swVal:
+                return True
+        return False
 
 
     def endSwap(self, value):
