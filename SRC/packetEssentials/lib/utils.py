@@ -97,6 +97,51 @@ class Poption(object):
                 return pktFlow(' '.join(streamList[:-qty]).replace(' ', ''), output)
 
 
+def crcShave(sObj, shaveLeft = True, swVal = False):
+    """Given a scapy object, iterate through all possible crc32 values
+    Shave from left to right by default
+    Calculate the CRC32 until there are no more bytes
+    Returns True and stops if swVal is found
+
+    Useful for throwing things against a wall and seeing what sticks
+
+    If you know the scapy/wireshark version of the FCS you are hunting, use the
+    swVal.  As an example --> crcShave(sObj, swVal = '0x153e3ebd')
+
+    If you want to shave the bytes from right to left, shaveLeft = False
+
+    Don't forget to remove the FCS bytes on the end of a frame before using, if
+    those bytes are the FCS you hunt.
+
+    Example usage as a simple function:
+    import binascii
+    import packetEssentials as PE
+    from scapy.all import *
+    from textwrap import wrap
+    p = RadioTap(binascii.unhexlify('00 00 38 00 2F 40 40 A0 20 08 00 A0 20 08 00 00 20 33 7B CD 04 00 00 00 10 0C 9E 09 C0 00 A7 00 00 00 00 00 00 00 00 00 61 32 7B CD 00 00 00 00 16 00 11 03 A7 00 A3 01 C4 00 32 05 E0 3E 44 08 00 00 BD 3E 3E 15'.replace(' ', '')))
+    swVal = hex(p[Dot11FCS].fcs)
+    btVal = ' '.join(wrap(PE.pt.endSwap(swVal).upper()[2:], 2))                 ## Useful to know for Endianness
+    lbVal = PE.pt.byteRip(p, output = 'hex', qty = 4, order = 'last')
+    choppedP = PE.pt.byteRip(p, chop = True, output = 'str', qty = 4, order = 'last')
+    x = crcShave(choppedP, swVal = swVal, shaveLeft = False)
+    print(x)
+    """
+    if shaveLeft is True:
+        dir = 'first'
+    else:
+        dir = 'last'
+    for n in range(len(sObj)):
+        ourByte = self.byteRip(sObj, order = dir, chop = True, output = 'str', qty = n)
+        ourCrc = crc32(ourByte)
+        ourHex = hex(0xffffffff & ourCrc)
+        print('{0} --> {1} {2}'.format(n, ourHex, hexstr(ourByte, onlyhex = 1)))
+
+        ## Check sw
+        if hex(crc32(self.byteRip(sObj, chop = True, output = 'str', qty = n))) == swVal:
+            return True
+    return False
+
+
     def endSwap(self, value):
         """Takes an object and reverse Endians the bytes
 
@@ -141,35 +186,24 @@ class Poption(object):
                frame,
                start = None,
                end = None,
-               mLength = 0,
                output = 'bytes'):
         """Return the FCS for a given frame
-
-        MODIFYING THIS PROBABLY BREAKS OTHER THINGS
-
-        Where objFrame is the frame
-        x = hexstr(objFrame, onlyhex = 1).replace(' ', '').lower()
-        crc32(binascii.unhexlify(x.replace(' ', '')))
-
+        start and end are treated as individual bytes to shave left and right,
+        that are removed prior to calculating the FCS.
+            - Useful if you want to byteRip inline so to speak
         """
-        ## Original Python2x way of doing it -- when str(frame) worked nicely...
-        # frame = str(frame)
-        # frame = frame[start:end]
-        # frame = crc32(frame) & 0xffffffff
+        ## Calculations
+        frame = ''.join(textwrap.wrap(hexstr(binascii.unhexlify(binascii.b2a_hex(bytes(p))), onlyhex = 1).replace(' ', '').lower(), 2)[start:end])
+        crc = crc32(binascii.unhexlify(frame)) & 0xffffffff
+        fcs = hex(crc).replace('0x', '')
 
-        ## Python 2x or 3x way
-        # frame = str(frame)  ## As we're using the raw object to get to 2x str() format, this is no longer needed
-        frame = frame[start:end]
-        frame = hexstr(frame, onlyhex = 1).replace(' ', '').lower()
-        frame = crc32(binascii.unhexlify(frame.replace(' ', ''))) & 0xffffffff
-
-        fcs = hex(frame).replace('0x', '')
-        while len(fcs) < mLength:
+        ## Padding
+        while len(fcs) < 0:
             fcs = '0' + fcs
         fcs = self.endSwap(fcs)
-        if output == 'bytes':
-            return fcs
-        elif output == 'str':
+
+        ## Returns
+        if output == 'str':
             return binascii.unhexlify(fcs)
         else:
             return fcs
