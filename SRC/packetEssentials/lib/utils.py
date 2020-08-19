@@ -1,11 +1,11 @@
 from .converter import Converter
-
 from scapy.layers.dot11 import Dot11
 from scapy.utils import hexstr, PcapReader, PcapWriter, rdpcap, wrpcap
 from scapy.plist import PacketList
 from zlib import crc32
 import binascii
 import sys
+import textwrap
 
 class Poption(object):
     """Class to deal with packet specific options"""
@@ -27,7 +27,7 @@ class Poption(object):
                 compress = False,
                 order = 'first',
                 output = 'hex',
-                qty = 1):
+                qty = 0):
         """Take a packet and grab a grouping of bytes, based on what you want
 
         byteRip can accept a scapy object or a scapy object in str() format
@@ -97,6 +97,21 @@ class Poption(object):
                 return pktFlow(' '.join(streamList[:-qty]).replace(' ', ''), output)
 
 
+    def bytesCompare(self, xList, yList):
+        """Compare two lists of bytes and show the deltas as such:
+            <index of lists delta>: <x from xList> -- <y from yList>
+
+        bytesCompare(
+                     hexstr(xObj, onlyhex = 1).split(),
+                     hexstr(yObj, onlyhex = 1).split()
+                    )
+        """
+        for iVal, (x, y) in enumerate(zip(xList, yList)):
+            if x != y:
+                print('{0}: {1} -- {2}'.format(iVal, x, y))
+        print('\n{0} -- {1}'.format(len(xList), len(yList)))
+
+
     def crcShave(self, sObj, shaveLeft = True, swVal = False):
         """Given a scapy object, iterate through all possible crc32 values
         Shave from left to right by default
@@ -123,7 +138,7 @@ class Poption(object):
         btVal = ' '.join(wrap(PE.pt.endSwap(swVal).upper()[2:], 2))                 ## Useful to know for Endianness
         lbVal = PE.pt.byteRip(p, output = 'hex', qty = 4, order = 'last')
         choppedP = PE.pt.byteRip(p, chop = True, output = 'str', qty = 4, order = 'last')
-        x = crcShave(choppedP, swVal = swVal, shaveLeft = False)
+        x = PE.pt.crcShave(choppedP, swVal = swVal, shaveLeft = False)
         print(x)
         """
         if shaveLeft is True:
@@ -183,27 +198,28 @@ class Poption(object):
 
 
     def fcsGen(self,
-               frame,
-               start = None,
-               end = None,
+               ourObj,
                output = 'bytes'):
-        """Return the FCS for a given frame
-        start and end are treated as individual bytes to shave left and right,
-        that are removed prior to calculating the FCS.
-            - Useful if you want to byteRip inline so to speak
-        """
-        ## Calculations
-        frame = ''.join(textwrap.wrap(hexstr(binascii.unhexlify(binascii.b2a_hex(bytes(p))), onlyhex = 1).replace(' ', '').lower(), 2)[start:end])
-        crc = crc32(binascii.unhexlify(frame)) & 0xffffffff
-        fcs = hex(crc).replace('0x', '')
+        """Return the FCS for a given set of bytes
 
-        ## Padding
-        while len(fcs) < 0:
+        If you want to chop bytes for calculation, leverage self.byteRip():
+            fcsGen(self.byteRip(ourObj, chop = True, output = 'str')
+
+        Works with native scapy object, or the str() style representation of bytes
+        """
+        if type(ourObj) != str:
+            sObj = binascii.unhexlify(hexstr(ourObj, onlyhex = 1).replace(' ', ''))
+        else:
+            sObj = ourObj
+
+        frame = crc32(sObj) & 0xffffffff
+        fcs = hex(frame).replace('0x', '')
+        while len(fcs) < 0:                                                     ## I forget why we do this
             fcs = '0' + fcs
         fcs = self.endSwap(fcs)
-
-        ## Returns
-        if output == 'str':
+        if output == 'bytes':
+            return fcs
+        elif output == 'str':
             return binascii.unhexlify(fcs)
         else:
             return fcs
