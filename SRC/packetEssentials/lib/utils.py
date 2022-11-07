@@ -9,6 +9,9 @@ import textwrap
 
 class Poption(object):
     """Class to deal with packet specific options"""
+    __slots__ = ('cv',
+                 'nonceDict',
+                 'verbose')
 
     def __init__(self):
         self.nonceDict = {'8a': 'a1',

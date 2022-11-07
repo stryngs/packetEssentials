@@ -9,6 +9,22 @@ class Handlers(object):
 
     Requires utils Class object as a parameter for Instantiation
     """
+    __slots__ = ('envTrafficCount',
+                 'handler',
+                 'handlerDict',
+                 'metaMode',
+                 'metaCounts',
+                 'metaSums',
+                 'mpTrafficList',
+                 'mpTrafficCount',
+                 'mpTrafficHit',
+                 'signal_handler',
+                 'soloList',
+                 'soloCount',
+                 'soloHit',
+                 'util',
+                 'verbose')
+
     def __init__(self, util):
         self.envTrafficCount = 0
         self.mpTrafficList = []

@@ -1,5 +1,6 @@
 class ChanFreq(object):
     """This class is for channel/frequency specific tasks"""
+    __slots__ = tuple()
 
     def twoFour(self, val):
         """Frequency to Channel converter for 2.4 ghz"""

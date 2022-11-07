@@ -1,5 +1,6 @@
 class Subtypes(object):
     """This class is for naming of subtypes where symStrings doesn't work"""
+    __slots__ = tuple()
 
     def mgmtSubtype(self, val):
             """Management Frame Subtypes"""

@@ -1,5 +1,6 @@
 class Converter(object):
     """Class for simple conversions"""
+    __slots__ = tuple()
 
     def symString(self, scpObject, field):
             """Shows the symblic string for a given field

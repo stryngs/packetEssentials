@@ -2,6 +2,8 @@ import fcntl, os, struct
 
 class Tap(object):
     """Generate and handle a tap interface"""
+    __slots__ = ('nic',
+                 'tapName')
 
     def __init__(self, tapNum = 0):
         self.tapName = 'tap' + str(tapNum)

@@ -223,13 +223,3 @@ Class to deal with packet specific options
   import packetEssentials as PE
   nTap = PE.lib.nic.Tap(3)
   ````
-* lib/unifier.py
-  * A singular point of contact for tracking purposes
-  * Useful for passing around a Class with its associated objects
-  ````python
-  ## Keep track of wlan0mon using ath9k
-  import packetEssentials as PE
-  nUni = PE.lib.unifier.Unify('wlan0mon')
-  print nUni.offset
-  print nUni.nic
-  ````
