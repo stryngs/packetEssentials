@@ -5,7 +5,7 @@ from setuptools import setup
 
 setup(
     name = 'packetEssentials',
-    version = '1.8.4',
+    version = '1.8.6',
     author = 'stryngs',
     author_email = 'support@configitnow.com',
     packages = ['packetEssentials', 'packetEssentials.lib'],
