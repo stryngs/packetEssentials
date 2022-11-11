@@ -167,7 +167,7 @@ class Handlers(object):
         self.mpTrafficCount += 1
 
 
-    def soloCap(self, pkt, macX, q = False, verbose = False):
+    def soloCap(self, macX, q = False, verbose = False):
         """Packet handler to follow a given pair of MAC addresses
         Uses macFilter as a boolean wrapper to determine if both MACs were seen
         Captures self.soloList
@@ -176,24 +176,11 @@ class Handlers(object):
         self.verbose = verbose
         if q is not False:
             qty = int(q)
+        def snarf(pkt):
 
+            ## No count qty
+            if q is False:
 
-        ## No count qty
-        if q is False:
-
-            if self.util.macFilter(macX, pkt) is True:
-                self.soloList.append(pkt)
-                self.soloHit += 1
-                r = True
-            else:
-                r = False
-
-            if verbose is True:
-                print('{0} -- '.format(r) + str(self.soloCount) + '--' + str(self.soloHit))
-
-        ## Count qty
-        else:
-            if self.soloHit < qty:
                 if self.util.macFilter(macX, pkt) is True:
                     self.soloList.append(pkt)
                     self.soloHit += 1
@@ -203,10 +190,24 @@ class Handlers(object):
 
                 if verbose is True:
                     print('{0} -- '.format(r) + str(self.soloCount) + '--' + str(self.soloHit))
+
+            ## Count qty
             else:
-                wrpcap('solo.pcap', self.soloList)
-                sys.exit(0)
-        self.soloCount += 1
+                if self.soloHit < qty:
+                    if self.util.macFilter(macX, pkt) is True:
+                        self.soloList.append(pkt)
+                        self.soloHit += 1
+                        r = True
+                    else:
+                        r = False
+
+                    if verbose is True:
+                        print('{0} -- '.format(r) + str(self.soloCount) + '--' + str(self.soloHit))
+                else:
+                    wrpcap('solo.pcap', self.soloList)
+                    sys.exit(0)
+            self.soloCount += 1
+        return snarf
 
 
     def soloThreaded(self, macX, q = False, verbose = False):
