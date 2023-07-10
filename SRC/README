@@ -5,6 +5,8 @@ An essential set of modules for working with packets using the Scapy Library in 
 ### chanFreq
 Import for lib/chan_freq.py
 This class is for channel/frequency specific tasks
+* chanDict - A dictionary that converts a channel in integer format to the frequency in integer format
+* freqDict - A dictionary that converts a frequency in integer format to the channel in integer format
 * twoFour(val)
     ````python
     """Converts the 2.4GHz frequency to its decimal-based counterpart"""
